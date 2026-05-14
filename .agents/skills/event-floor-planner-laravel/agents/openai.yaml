@@ -1,0 +1,6 @@
+interface:
+  display_name: "Event Floor Planner Laravel"
+  short_description: "Laravel 10/PHP 8.2 Arabic RTL floor planner guidance"
+  brand_color: "#4D9B97"
+policy:
+  allow_implicit_invocation: true
