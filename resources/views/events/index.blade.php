@@ -37,7 +37,7 @@
 
         @if ($events->isEmpty())
             <div class="empty-state">
-                <img src="{{ asset('images/icon2.png') }}" alt="" aria-hidden="true">
+                <img src="{{ asset('images/icon.png') }}" alt="" aria-hidden="true">
                 <h3>لا توجد أحداث بعد</h3>
                 <p>ابدأ بإنشاء أول حدث، وبعدها ستتمكن من إضافة المخططات والضيوف.</p>
                 <a href="{{ route('events.create') }}" class="btn btn-primary">إنشاء حدث جديد</a>
@@ -51,7 +51,6 @@
                             <th>التاريخ</th>
                             <th>الموقع</th>
                             <th>عدد المخططات</th>
-                            <th>روابط التسجيل</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
@@ -65,26 +64,6 @@
                                 <td>{{ $event->location ?: 'غير محدد' }}</td>
                                 <td>
                                     <span class="status-badge">{{ $event->floorplans_count }} مخطط</span>
-                                </td>
-                                <td>
-                                    @php($registrationLinks = $eventRegistrationLinks[$event->id] ?? [])
-                                    @if ($registrationLinks !== [])
-                                        <div class="event-table-link-actions">
-                                            @foreach ($registrationLinks as $guestTypeLink)
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-secondary btn-sm event-type-copy-btn"
-                                                    style="--badge-color: {{ $guestTypeLink['color'] }}"
-                                                    data-copy-text="{{ $guestTypeLink['url'] }}"
-                                                    data-copy-label="{{ $guestTypeLink['label'] }}"
-                                                >
-                                                    {{ $guestTypeLink['label'] }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="status-badge muted">غير مفعلة</span>
-                                    @endif
                                 </td>
                                 <td>
                                     <div class="table-actions action-buttons">

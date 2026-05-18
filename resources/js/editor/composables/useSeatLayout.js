@@ -1,30 +1,49 @@
+import { ENGINEERING_SCALE } from '../utils/scale';
+
 export const TABLE_SHAPES = [
-    { value: 'round', label: 'دائرية' },
-    { value: 'rectangle', label: 'مستطيلة' },
-    { value: 'square', label: 'مربعة' },
-    { value: 'banquet', label: 'وليمة طويلة' },
-    { value: 'theater', label: 'صفوف مسرح' },
+    { value: 'round-100', label: 'Round 100 cm', chairs: 4 },
+    { value: 'round-120', label: 'Round 120 cm', chairs: 5 },
+    { value: 'rectangle', label: 'Rectangle' },
+    { value: 'square', label: 'Square' },
+    { value: 'banquet', label: 'Banquet' },
+    { value: 'theater', label: 'Theater rows' },
 ];
 
 export function shapeLabel(shape) {
-    return TABLE_SHAPES.find((item) => item.value === shape)?.label || 'مستطيلة';
+    return TABLE_SHAPES.find((item) => item.value === shape)?.label || 'Rectangle';
+}
+
+export function isRoundTableShape(shape) {
+    return ['round', 'round-100', 'round-120'].includes(shape);
 }
 
 export function defaultSizeForShape(shape) {
     const sizes = {
-        round: { width: 102, height: 102 },
-        rectangle: { width: 178, height: 104 },
-        square: { width: 124, height: 124 },
-        banquet: { width: 240, height: 84 },
-        theater: { width: 280, height: 170 },
+        round: { widthCm: 100, heightCm: 100, diameterCm: 100 },
+        'round-100': { widthCm: 100, heightCm: 100, diameterCm: 100 },
+        'round-120': { widthCm: 120, heightCm: 120, diameterCm: 120 },
+        rectangle: { widthCm: 220, heightCm: 120 },
+        square: { widthCm: 140, heightCm: 140 },
+        banquet: { widthCm: 300, heightCm: 100 },
+        theater: { widthCm: 360, heightCm: 220 },
     };
 
     return sizes[shape] || sizes.rectangle;
 }
 
+export function tableDiameterCm(elementOrShape) {
+    const shape = typeof elementOrShape === 'string'
+        ? elementOrShape
+        : elementOrShape?.tableShape || 'rectangle';
+
+    return Number(defaultSizeForShape(shape).diameterCm || 0);
+}
+
 export function defaultSeatCountForShape(shape) {
     const defaults = {
-        round: 5,
+        round: 4,
+        'round-100': 4,
+        'round-120': 5,
         theater: 24,
     };
 
@@ -32,6 +51,10 @@ export function defaultSeatCountForShape(shape) {
 }
 
 export function normalizeSeatCount(value, shape = 'rectangle') {
+    if (isRoundTableShape(shape)) {
+        return defaultSeatCountForShape(shape);
+    }
+
     const max = shape === 'theater' ? 160 : 80;
     const parsed = Number.parseInt(value, 10);
 
@@ -57,30 +80,44 @@ export function generateSeats(element) {
         return generateTheaterSeats(element, seatCount);
     }
 
-    if (shape === 'round') {
+    if (isRoundTableShape(shape)) {
         return generateRoundSeats(element, seatCount);
     }
 
     return generatePerimeterSeats(element, seatCount);
 }
 
-function makeSeat(element, index, x, y, rotation = 0) {
+function makeSeat(element, index, xCm, yCm, rotation = 0) {
     const number = index + 1;
+    const roundedXCm = Math.round(xCm * 10) / 10;
+    const roundedYCm = Math.round(yCm * 10) / 10;
 
     return {
         key: `${element.id}-seat-${number}`,
         number,
         label: String(number),
-        x: Math.round(x),
-        y: Math.round(y),
+        xCm: roundedXCm,
+        yCm: roundedYCm,
+        x: roundedXCm,
+        y: roundedYCm,
         rotation: Math.round(rotation),
     };
 }
 
+function elementWidthCm(element) {
+    return Number(element.widthCm ?? defaultSizeForShape(element.tableShape).widthCm);
+}
+
+function elementHeightCm(element) {
+    return Number(element.heightCm ?? defaultSizeForShape(element.tableShape).heightCm);
+}
+
 function generateRoundSeats(element, seatCount) {
-    const centerX = element.width / 2;
-    const centerY = element.height / 2;
-    const radius = Math.max(element.width, element.height) / 2 + 28;
+    const centerX = elementWidthCm(element) / 2;
+    const centerY = elementHeightCm(element) / 2;
+    const radius = Math.max(elementWidthCm(element), elementHeightCm(element)) / 2
+        + (ENGINEERING_SCALE.CHAIR_DIAMETER_CM / 2)
+        + ENGINEERING_SCALE.CHAIR_GAP_CM;
 
     return Array.from({ length: seatCount }, (_, index) => {
         const angle = ((index / seatCount) * Math.PI * 2) - (Math.PI / 2);
@@ -96,9 +133,9 @@ function generateRoundSeats(element, seatCount) {
 }
 
 function generatePerimeterSeats(element, seatCount) {
-    const width = element.width;
-    const height = element.height;
-    const gap = 28;
+    const width = elementWidthCm(element);
+    const height = elementHeightCm(element);
+    const gap = (ENGINEERING_SCALE.CHAIR_DIAMETER_CM / 2) + ENGINEERING_SCALE.CHAIR_GAP_CM;
     const sides = allocateSeatsBySide(width, height, seatCount, element.tableShape || 'rectangle');
     const seats = [];
 
@@ -161,10 +198,10 @@ function appendEdgeSeats(seats, element, count, startX, endX, startY, endY, rota
 function generateTheaterSeats(element, seatCount) {
     const rows = normalizeTheaterRows(element.theaterRows || 4, seatCount);
     const columns = Math.ceil(seatCount / rows);
-    const xGap = 36;
-    const yGap = 36;
-    const startX = Math.max(28, (element.width - ((columns - 1) * xGap)) / 2);
-    const startY = 34;
+    const xGap = 55;
+    const yGap = 55;
+    const startX = Math.max(35, (elementWidthCm(element) - ((columns - 1) * xGap)) / 2);
+    const startY = 40;
 
     return Array.from({ length: seatCount }, (_, index) => {
         const row = Math.floor(index / columns);

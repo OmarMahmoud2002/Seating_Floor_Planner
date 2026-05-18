@@ -1,3 +1,5 @@
+import { pixelsToCm } from '../utils/scale';
+
 export const ELEMENT_LIBRARY = [
     {
         group: 'عناصر القاعة',
@@ -96,14 +98,22 @@ export function elementTypeLabel(type) {
 
 export function normalizeGenericElement(element) {
     const defaults = elementDefaults(element.type);
+    const widthCm = Number(element.widthCm ?? pixelsToCm(element.width ?? defaults.width));
+    const heightCm = Number(element.heightCm ?? pixelsToCm(element.height ?? defaults.height));
+    const xCm = Number(element.xCm ?? pixelsToCm(element.x ?? 120));
+    const yCm = Number(element.yCm ?? pixelsToCm(element.y ?? 120));
 
     return {
         ...element,
         label: element.label || defaults.label,
-        x: Number(element.x || 120),
-        y: Number(element.y || 120),
-        width: Math.max(Number(element.width || defaults.width), 12),
-        height: Math.max(Number(element.height || defaults.height), 12),
+        xCm,
+        yCm,
+        widthCm: Math.max(widthCm, 10),
+        heightCm: Math.max(heightCm, 10),
+        x: xCm,
+        y: yCm,
+        width: Math.max(widthCm, 10),
+        height: Math.max(heightCm, 10),
         rotation: Number(element.rotation || 0),
         fill: element.fill || defaults.fill,
         stroke: element.stroke || defaults.stroke,

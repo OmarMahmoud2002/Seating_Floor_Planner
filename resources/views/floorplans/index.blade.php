@@ -34,7 +34,7 @@
 
         @if ($floorplans->isEmpty())
             <div class="empty-state">
-                <img src="{{ asset('images/icon2.png') }}" alt="" aria-hidden="true">
+                <img src="{{ asset('images/icon.png') }}" alt="" aria-hidden="true">
                 <h3>لا توجد مخططات بعد</h3>
                 <p>أنشئ حدثا أولا، ثم أضف مخطط القاعة من صفحة تفاصيل الحدث.</p>
                 <a href="{{ route('events.index') }}" class="btn btn-primary">عرض الأحداث</a>

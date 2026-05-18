@@ -7,7 +7,7 @@
 
     <title>@yield('title', config('app.name', 'Seating Floor Planner'))</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('logo-2-02.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/icon.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

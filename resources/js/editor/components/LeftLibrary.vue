@@ -36,7 +36,8 @@ defineEmits(['add-table', 'add-element', 'collapse']);
                         <span class="library-icon" :class="`shape-${shape.value}`"></span>
                         <span>
                             <strong>{{ shape.label }}</strong>
-                            <small>توليد مقاعد تلقائي بتسميات ثابتة</small>
+                            <small v-if="shape.chairs">{{ shape.chairs }} chairs</small>
+                            <small v-else>توليد مقاعد تلقائي بتسميات ثابتة</small>
                         </span>
                     </button>
                 </div>

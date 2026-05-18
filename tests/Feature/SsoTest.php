@@ -96,6 +96,39 @@ class SsoTest extends TestCase
         $this->assertAuthenticatedAs($owner);
     }
 
+    public function test_super_admin_event_floorplans_sso_redirects_to_event_details(): void
+    {
+        $organization = $this->createOrganizationWithAdmin();
+        $superAdmin = User::factory()->create([
+            'role' => User::ROLE_SUPER_ADMIN,
+        ]);
+        $event = Event::factory()->create([
+            'organization_id' => $organization->id,
+            'external_event_id' => 101,
+            'name' => 'Admin Synced Event',
+        ]);
+
+        $response = $this->withToken('sync-secret')
+            ->postJson(route('api.sync.sso-links'), [
+                'target' => SsoLinkService::TARGET_EVENT_FLOORPLANS,
+                'role' => User::ROLE_SUPER_ADMIN,
+                'external_user_id' => $organization->external_user_id,
+                'external_event_id' => $event->external_event_id,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.target', SsoLinkService::TARGET_EVENT_FLOORPLANS);
+
+        $this->get($response->json('data.url'))
+            ->assertRedirect(route('events.show', $event, false));
+
+        $this->assertAuthenticatedAs($superAdmin);
+        $this->assertDatabaseHas('sso_tokens', [
+            'user_id' => $superAdmin->id,
+            'event_id' => $event->id,
+            'target' => SsoLinkService::TARGET_EVENT_FLOORPLANS,
+        ]);
+    }
+
     public function test_admin_dashboard_sso_target_logs_in_super_admin(): void
     {
         $superAdmin = User::factory()->create([

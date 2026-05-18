@@ -1,7 +1,16 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Konva from 'konva';
-import { shapeLabel } from '../composables/useSeatLayout';
+import { isRoundTableShape, shapeLabel } from '../composables/useSeatLayout';
+import {
+    ENGINEERING_SCALE,
+    cmRectToPixels,
+    cmToPixels,
+    floorPixelSize,
+    metersToPixels,
+    pixelsToCm,
+    pixelsToSnappedCm,
+} from '../utils/scale';
 
 const props = defineProps({
     floorplan: {
@@ -24,6 +33,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    snapToGrid: {
+        type: Boolean,
+        default: true,
+    },
     selectedElementId: {
         type: String,
         default: null,
@@ -40,61 +53,12 @@ let backgroundLayer;
 let elementLayer;
 let transformer;
 
-const PAPER_SIZES = {
-    A2: { width: 1684, height: 1191 },
-    A3: { width: 1191, height: 842 },
-    A4: { width: 842, height: 595 },
-};
-
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
-function roundUpToGrid(value, gridSize) {
-    return Math.ceil(value / gridSize) * gridSize;
-}
-
 function canvasDimensions() {
-    const gridSize = Math.max(Number(props.floorplan.grid_size || 20), 4);
-    const widthUnits = Math.max(Number(props.floorplan.width || 1), 1);
-    const heightUnits = Math.max(Number(props.floorplan.height || 1), 1);
-    const paperSize = PAPER_SIZES[props.floorplan.paper_size] || PAPER_SIZES.A3;
-    const paperWidth = props.floorplan.orientation === 'portrait' ? paperSize.height : paperSize.width;
-    const paperHeight = props.floorplan.orientation === 'portrait' ? paperSize.width : paperSize.height;
-    const pixelsPerUnit = props.floorplan.unit === 'foot'
-        ? Math.max(gridSize * 0.55, 8)
-        : Math.max(gridSize * 1.6, 24);
-    const paperScale = props.floorplan.paper_size === 'A2' ? 0.82 : props.floorplan.paper_size === 'A4' ? 1.06 : 0.94;
-    const minPaperWidth = paperWidth * paperScale;
-    const minPaperHeight = paperHeight * paperScale;
-    let rawWidth = Math.max(widthUnits * pixelsPerUnit, minPaperWidth);
-    let rawHeight = Math.max(heightUnits * pixelsPerUnit, minPaperHeight);
-    const paperRatio = paperWidth / paperHeight;
-    const canvasRatio = rawWidth / rawHeight;
-
-    if (canvasRatio > paperRatio) {
-        rawHeight = rawWidth / paperRatio;
-    } else {
-        rawWidth = rawHeight * paperRatio;
-    }
-
-    const fitScale = Math.max(900 / rawWidth, 620 / rawHeight, 1);
-
-    const width = clamp(rawWidth * fitScale, 900, 4200);
-    const height = clamp(rawHeight * fitScale, 620, 3000);
-
-    return {
-        width: roundUpToGrid(width, gridSize),
-        height: roundUpToGrid(height, gridSize),
-    };
-}
-
-function metersValue(value) {
-    const unitValue = Math.max(Number(value || 1), 1);
-
-    return props.floorplan.unit === 'foot'
-        ? unitValue * 0.3048
-        : unitValue;
+    return floorPixelSize(props.floorplan);
 }
 
 function formatMeters(value) {
@@ -106,8 +70,8 @@ function formatMeters(value) {
 
 function dimensionLabel(axis) {
     const value = axis === 'height'
-        ? metersValue(props.floorplan.height)
-        : metersValue(props.floorplan.width);
+        ? Number(props.floorplan.height || 1)
+        : Number(props.floorplan.width || 1);
     const suffix = axis === 'height' ? 'متر طول' : 'متر عرض';
 
     return `${formatMeters(value)} ${suffix}`;
@@ -144,21 +108,54 @@ function drawGrid() {
     gridLayer.destroyChildren();
 
     const size = logicalStageSize();
-    const gridSize = Math.max(Number(props.floorplan.grid_size || 20), 4);
+    const smallGridSize = cmToPixels(ENGINEERING_SCALE.SMALL_GRID_CM);
+    const meterGridSize = metersToPixels(1);
 
-    for (let x = 0; x <= size.width; x += gridSize) {
+    for (let x = 0; x <= size.width + 0.1; x += smallGridSize) {
+        const isMeterLine = Math.round(x) % Math.round(meterGridSize) === 0;
         gridLayer.add(new Konva.Line({
             points: [x, 0, x, size.height],
-            stroke: '#E4E7EC',
-            strokeWidth: x % (gridSize * 5) === 0 ? 1 : 0.5,
+            stroke: isMeterLine ? '#B6C2D2' : '#E8EDF3',
+            strokeWidth: isMeterLine ? 1.1 : 0.45,
         }));
     }
 
-    for (let y = 0; y <= size.height; y += gridSize) {
+    for (let y = 0; y <= size.height + 0.1; y += smallGridSize) {
+        const isMeterLine = Math.round(y) % Math.round(meterGridSize) === 0;
         gridLayer.add(new Konva.Line({
             points: [0, y, size.width, y],
-            stroke: '#E4E7EC',
-            strokeWidth: y % (gridSize * 5) === 0 ? 1 : 0.5,
+            stroke: isMeterLine ? '#B6C2D2' : '#E8EDF3',
+            strokeWidth: isMeterLine ? 1.1 : 0.45,
+        }));
+    }
+
+    for (let meter = 0; meter <= Number(props.floorplan.width || 1); meter += 1) {
+        const x = metersToPixels(meter);
+
+        gridLayer.add(new Konva.Text({
+            x: x + 3,
+            y: 3,
+            text: `${meter}m`,
+            fill: '#475467',
+            fontFamily: 'Cairo, Arial, sans-serif',
+            fontSize: 9,
+            fontStyle: 'bold',
+            listening: false,
+        }));
+    }
+
+    for (let meter = 0; meter <= Number(props.floorplan.height || 1); meter += 1) {
+        const y = metersToPixels(meter);
+
+        gridLayer.add(new Konva.Text({
+            x: 3,
+            y: y + 3,
+            text: `${meter}m`,
+            fill: '#475467',
+            fontFamily: 'Cairo, Arial, sans-serif',
+            fontSize: 9,
+            fontStyle: 'bold',
+            listening: false,
         }));
     }
 
@@ -224,6 +221,7 @@ function drawBackground() {
 
 function addTableShape(group, element, isSelected) {
     const shape = element.tableShape || 'rectangle';
+    const rect = cmRectToPixels(element);
     const baseAttrs = {
         fill: element.fill || '#F3F8FA',
         stroke: isSelected ? '#31719D' : element.stroke || '#4596CF',
@@ -234,12 +232,12 @@ function addTableShape(group, element, isSelected) {
         opacity: Number(element.opacity ?? 1),
     };
 
-    if (shape === 'round') {
+    if (isRoundTableShape(shape)) {
         group.add(new Konva.Circle({
             ...baseAttrs,
-            x: element.width / 2,
-            y: element.height / 2,
-            radius: Math.min(element.width, element.height) / 2,
+            x: rect.width / 2,
+            y: rect.height / 2,
+            radius: Math.min(rect.width, rect.height) / 2,
         }));
 
         return;
@@ -247,8 +245,8 @@ function addTableShape(group, element, isSelected) {
 
     group.add(new Konva.Rect({
         ...baseAttrs,
-        width: element.width,
-        height: element.height,
+        width: rect.width,
+        height: rect.height,
         cornerRadius: shape === 'theater' ? 8 : 12,
         dash: shape === 'theater' ? [8, 6] : [],
     }));
@@ -256,12 +254,33 @@ function addTableShape(group, element, isSelected) {
 
 function addTableLabel(group, element) {
     const shape = element.tableShape || 'rectangle';
+    const rect = cmRectToPixels(element);
     const label = element.label || shapeLabel(shape);
+
+    if (isRoundTableShape(shape)) {
+        group.add(new Konva.Text({
+            text: label,
+            width: rect.width,
+            height: rect.height,
+            x: 0,
+            y: 0,
+            align: 'center',
+            verticalAlign: 'middle',
+            fill: '#1F2937',
+            fontFamily: 'Cairo, Arial, sans-serif',
+            fontSize: 12,
+            fontStyle: 'bold',
+            ellipsis: true,
+            listening: false,
+        }));
+
+        return;
+    }
 
     group.add(new Konva.Text({
         text: label,
-        width: element.width,
-        height: shape === 'theater' ? 26 : element.height,
+        width: rect.width,
+        height: shape === 'theater' ? 26 : rect.height,
         y: shape === 'theater' ? 4 : 0,
         align: 'center',
         verticalAlign: shape === 'theater' ? 'top' : 'middle',
@@ -274,8 +293,8 @@ function addTableLabel(group, element) {
 }
 
 function compactGuestLabelPosition(seat, isHovered, element) {
-    const x = Number(seat.x || 0);
-    const y = Number(seat.y || 0);
+    const x = cmToPixels(seat.xCm ?? seat.x ?? 0);
+    const y = cmToPixels(seat.yCm ?? seat.y ?? 0);
     const labelWidth = isHovered ? 102 : 88;
     const labelHeight = isHovered ? 22 : 20;
     const shape = element?.tableShape || '';
@@ -454,17 +473,18 @@ function addBadgeIcon(group, badge, index, total) {
 }
 
 function tableLocalBounds(element) {
-    const seatRadius = 20;
+    const rect = cmRectToPixels(element);
+    const seatRadius = cmToPixels(ENGINEERING_SCALE.CHAIR_DIAMETER_CM / 2);
     const bounds = {
         minX: 0,
         minY: 0,
-        maxX: Number(element.width || 0),
-        maxY: Number(element.height || 0),
+        maxX: rect.width,
+        maxY: rect.height,
     };
 
     (element.seats || []).forEach((seat) => {
-        const seatX = Number(seat.x || 0);
-        const seatY = Number(seat.y || 0);
+        const seatX = cmToPixels(seat.xCm ?? seat.x ?? 0);
+        const seatY = cmToPixels(seat.yCm ?? seat.y ?? 0);
 
         bounds.minX = Math.min(bounds.minX, seatX - seatRadius);
         bounds.minY = Math.min(bounds.minY, seatY - seatRadius);
@@ -552,8 +572,8 @@ function addSeatNodes(group, element, isSelected) {
         const assignedColor = guestTypeColor(assignment);
         const badges = seatBadges(assignment);
         const seatGroup = new Konva.Group({
-            x: seat.x,
-            y: seat.y,
+            x: cmToPixels(seat.xCm ?? seat.x ?? 0),
+            y: cmToPixels(seat.yCm ?? seat.y ?? 0),
             rotation: seat.rotation || 0,
         });
 
@@ -568,7 +588,7 @@ function addSeatNodes(group, element, isSelected) {
         });
 
         seatGroup.add(new Konva.Circle({
-            radius: isHovered ? 19 : assignment ? 15 : 14,
+            radius: isHovered ? cmToPixels(ENGINEERING_SCALE.CHAIR_DIAMETER_CM / 2) + 2 : cmToPixels(ENGINEERING_SCALE.CHAIR_DIAMETER_CM / 2),
             fill: isHovered
                 ? hexToRgba(assignedColor, assignment ? 0.22 : 0.12)
                 : assignment ? hexToRgba(assignedColor, 0.16) : '#FFFFFF',
@@ -625,13 +645,14 @@ function addSeatNodes(group, element, isSelected) {
 
 function makeTableNode(element) {
     const isSelected = props.selectedElementId === element.id;
-    const position = clampTablePosition(element, Number(element.x || 0), Number(element.y || 0));
+    const rect = cmRectToPixels(element);
+    const position = clampTablePosition(element, rect.x, rect.y);
     const group = new Konva.Group({
         id: element.id,
         x: position.x,
         y: position.y,
-        width: element.width,
-        height: element.height,
+        width: rect.width,
+        height: rect.height,
         draggable: !props.panMode,
         rotation: element.rotation || 0,
     });
@@ -646,9 +667,10 @@ function makeTableNode(element) {
 }
 
 function addGenericElementShape(group, element, isSelected) {
+    const rect = cmRectToPixels(element);
     const baseAttrs = {
-        width: element.width,
-        height: element.height,
+        width: rect.width,
+        height: rect.height,
         fill: element.fill || '#F3F8FA',
         stroke: isSelected ? '#31719D' : element.stroke || '#4D9B97',
         strokeWidth: isSelected ? 3 : 2,
@@ -669,17 +691,17 @@ function addGenericElementShape(group, element, isSelected) {
 
     if (element.type === 'door') {
         const stroke = isSelected ? '#31719D' : element.stroke || '#0F766E';
-        const padding = Math.max(5, Math.min(element.width, element.height) * 0.08);
+        const padding = Math.max(5, Math.min(rect.width, rect.height) * 0.08);
         const hingeX = padding;
-        const baseY = element.height - padding;
-        const radius = Math.max(16, Math.min(element.width, element.height) - (padding * 2));
+        const baseY = rect.height - padding;
+        const radius = Math.max(16, Math.min(rect.width, rect.height) - (padding * 2));
         const jambX = hingeX + radius;
         const topY = baseY - radius;
         const strokeWidth = isSelected ? 3 : 2.6;
 
         group.add(new Konva.Rect({
-            width: element.width,
-            height: element.height,
+            width: rect.width,
+            height: rect.height,
             fill: 'rgba(255,255,255,0.01)',
             stroke: isSelected ? '#7CB6D8' : 'transparent',
             strokeWidth: isSelected ? 1.2 : 0,
@@ -722,11 +744,11 @@ function addGenericElementShape(group, element, isSelected) {
     }
 
     if (element.type === 'chair') {
-        const radius = Math.min(element.width, element.height) / 2;
+        const radius = Math.min(rect.width, rect.height) / 2;
         group.add(new Konva.Circle({
             ...baseAttrs,
-            x: element.width / 2,
-            y: element.height / 2,
+            x: rect.width / 2,
+            y: rect.height / 2,
             radius,
         }));
 
@@ -735,11 +757,11 @@ function addGenericElementShape(group, element, isSelected) {
 
     if (element.type === 'lighting') {
         group.add(new Konva.Star({
-            x: element.width / 2,
-            y: element.height / 2,
+            x: rect.width / 2,
+            y: rect.height / 2,
             numPoints: 8,
-            innerRadius: Math.max(Math.min(element.width, element.height) * 0.22, 6),
-            outerRadius: Math.max(Math.min(element.width, element.height) * 0.45, 12),
+            innerRadius: Math.max(Math.min(rect.width, rect.height) * 0.22, 6),
+            outerRadius: Math.max(Math.min(rect.width, rect.height) * 0.45, 12),
             fill: baseAttrs.fill,
             stroke: baseAttrs.stroke,
             strokeWidth: baseAttrs.strokeWidth,
@@ -764,15 +786,17 @@ function addGenericElementLabel(group, element) {
         return;
     }
 
+    const rect = cmRectToPixels(element);
+
     group.add(new Konva.Text({
         text: element.label || '',
-        width: element.width,
-        height: element.height,
+        width: rect.width,
+        height: rect.height,
         align: 'center',
         verticalAlign: 'middle',
         fill: '#1F2937',
         fontFamily: 'Cairo, Arial, sans-serif',
-        fontSize: Math.max(Math.min(element.height / 3, 15), 10),
+        fontSize: Math.max(Math.min(rect.height / 3, 15), 10),
         fontStyle: 'bold',
         listening: false,
     }));
@@ -780,12 +804,13 @@ function addGenericElementLabel(group, element) {
 
 function makeGenericNode(element) {
     const isSelected = props.selectedElementId === element.id;
+    const rect = cmRectToPixels(element);
     const group = new Konva.Group({
         id: element.id,
-        x: element.x,
-        y: element.y,
-        width: element.width,
-        height: element.height,
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
         draggable: !props.panMode,
         rotation: element.rotation || 0,
     });
@@ -805,10 +830,14 @@ function attachNodeEvents(group, element) {
 
     group.on('dragend', () => {
         keepNodeInsidePaper(group, element);
+        const xCm = pixelsToSnappedCm(group.x(), props.snapToGrid);
+        const yCm = pixelsToSnappedCm(group.y(), props.snapToGrid);
 
         emit('update-element', element.id, {
-            x: Math.round(group.x()),
-            y: Math.round(group.y()),
+            xCm,
+            yCm,
+            x: xCm,
+            y: yCm,
         });
     });
 
@@ -819,10 +848,14 @@ function attachNodeEvents(group, element) {
     group.on('transformend', () => {
         if (element.type === 'table') {
             group.scale({ x: 1, y: 1 });
+            const xCm = pixelsToSnappedCm(group.x(), props.snapToGrid);
+            const yCm = pixelsToSnappedCm(group.y(), props.snapToGrid);
 
             emit('update-element', element.id, {
-                x: Math.round(group.x()),
-                y: Math.round(group.y()),
+                xCm,
+                yCm,
+                x: xCm,
+                y: yCm,
             });
 
             return;
@@ -832,18 +865,26 @@ function attachNodeEvents(group, element) {
         const scaleY = group.scaleY();
 
         group.scale({ x: 1, y: 1 });
+        const xCm = pixelsToSnappedCm(group.x(), props.snapToGrid);
+        const yCm = pixelsToSnappedCm(group.y(), props.snapToGrid);
+        const widthCm = pixelsToCm(Math.min(
+            Math.max(Math.round((group.width() || cmToPixels(element.widthCm || element.width || 40)) * scaleX), cmToPixels(10)),
+            logicalStageSize().width,
+        ));
+        const heightCm = pixelsToCm(Math.min(
+            Math.max(Math.round((group.height() || cmToPixels(element.heightCm || element.height || 40)) * scaleY), cmToPixels(10)),
+            logicalStageSize().height,
+        ));
 
         emit('update-element', element.id, {
-            x: Math.round(group.x()),
-            y: Math.round(group.y()),
-            width: Math.min(
-                Math.max(Math.round((element.width || group.width() || 40) * scaleX), 12),
-                logicalStageSize().width,
-            ),
-            height: Math.min(
-                Math.max(Math.round((element.height || group.height() || 40) * scaleY), 12),
-                logicalStageSize().height,
-            ),
+            xCm,
+            yCm,
+            widthCm,
+            heightCm,
+            x: xCm,
+            y: yCm,
+            width: widthCm,
+            height: heightCm,
             rotation: Math.round(group.rotation()),
         });
     });
@@ -912,14 +953,18 @@ function seatAbsolutePosition(element, seat) {
     const sin = Math.sin(rotation);
 
     return {
-        x: element.x + (seat.x * cos) - (seat.y * sin),
-        y: element.y + (seat.x * sin) + (seat.y * cos),
+        x: cmToPixels(element.xCm ?? element.x ?? 0)
+            + (cmToPixels(seat.xCm ?? seat.x ?? 0) * cos)
+            - (cmToPixels(seat.yCm ?? seat.y ?? 0) * sin),
+        y: cmToPixels(element.yCm ?? element.y ?? 0)
+            + (cmToPixels(seat.xCm ?? seat.x ?? 0) * sin)
+            + (cmToPixels(seat.yCm ?? seat.y ?? 0) * cos),
     };
 }
 
 function nearestSeat(point) {
     let closest = null;
-    const hitRadius = 30;
+    const hitRadius = cmToPixels(ENGINEERING_SCALE.CHAIR_DIAMETER_CM);
 
     props.elements.forEach((element) => {
         if (element.type !== 'table') {

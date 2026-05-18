@@ -35,10 +35,6 @@ class EventController extends Controller
         return view('events.index', [
             'events' => $events,
             'search' => $search,
-            'guestTypeLinkTypes' => $this->guestTypeLinkTypes(),
-            'eventRegistrationLinks' => $events->getCollection()
-                ->mapWithKeys(fn (Event $event): array => [$event->id => $this->guestTypeLinks($event)])
-                ->all(),
         ]);
     }
 

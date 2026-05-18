@@ -50,6 +50,7 @@ const {
     zoomOut,
     resetZoom,
     togglePanMode,
+    toggleSnapToGrid,
     updateViewport,
     undo,
     redo,
@@ -331,10 +332,12 @@ onBeforeUnmount(() => {
             :can-redo="canRedo"
             :has-selection="Boolean(selectedElement)"
             :pan-mode="state.panMode"
+            :snap-to-grid="state.viewport.snapToGrid"
             @zoom-in="zoomIn"
             @zoom-out="zoomOut"
             @reset-zoom="resetZoom"
             @toggle-pan="togglePanMode"
+            @toggle-snap="toggleSnapToGrid"
             @undo="undo"
             @redo="redo"
             @duplicate-selected="duplicateSelectedElement"
@@ -385,6 +388,7 @@ onBeforeUnmount(() => {
                     :assignments="state.assignments"
                     :viewport="state.viewport"
                     :pan-mode="state.panMode"
+                    :snap-to-grid="state.viewport.snapToGrid"
                     :selected-element-id="state.selectedElementId"
                     @select="selectElement"
                     @update-element="updateElement"

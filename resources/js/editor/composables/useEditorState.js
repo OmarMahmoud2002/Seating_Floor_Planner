@@ -4,10 +4,13 @@ import {
     defaultSeatCountForShape,
     defaultSizeForShape,
     generateSeats,
+    isRoundTableShape,
     normalizeSeatCount,
     normalizeTheaterRows,
     shapeLabel,
+    tableDiameterCm,
 } from './useSeatLayout';
+import { ENGINEERING_SCALE, floorCmSize, pixelsToCm, snapCm } from '../utils/scale';
 
 function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -31,6 +34,7 @@ export function useEditorState() {
             scale: 1,
             x: 0,
             y: 0,
+            snapToGrid: true,
         },
         panMode: false,
         selectedElementId: null,
@@ -114,10 +118,10 @@ export function useEditorState() {
             tableShape: shape,
             seatCount,
             theaterRows: shape === 'theater' ? 4 : null,
-            x: 140 + (index * 24),
-            y: 120 + (index * 18),
-            width: size.width,
-            height: size.height,
+            xCm: 140 + (index * 30),
+            yCm: 120 + (index * 30),
+            widthCm: size.widthCm,
+            heightCm: size.heightCm,
             rotation: 0,
             fill: '#F3F8FA',
             stroke: '#4596CF',
@@ -138,8 +142,8 @@ export function useEditorState() {
             type,
             ...defaults,
             label: `${defaults.label} ${index}`,
-            x: 150 + (index * 22),
-            y: 135 + (index * 18),
+            xCm: pixelsToCm(150 + (index * 22)),
+            yCm: pixelsToCm(135 + (index * 18)),
         });
 
         state.elements.push(element);
@@ -162,7 +166,16 @@ export function useEditorState() {
             remember();
         }
 
+        const shapeChanged = element.type === 'table'
+            && patch.tableShape
+            && patch.tableShape !== element.tableShape
+            && patch.seatCount === undefined;
+
         Object.assign(element, patch);
+
+        if (shapeChanged) {
+            element.seatCount = defaultSeatCountForShape(element.tableShape);
+        }
 
         if (element.type === 'table') {
             normalizeTableElement(element);
@@ -226,6 +239,12 @@ export function useEditorState() {
 
     function togglePanMode() {
         state.panMode = !state.panMode;
+    }
+
+    function toggleSnapToGrid() {
+        updateViewport({
+            snapToGrid: !state.viewport.snapToGrid,
+        });
     }
 
     function updateViewport(patch) {
@@ -293,10 +312,16 @@ export function useEditorState() {
         element.theaterRows = shape === 'theater'
             ? normalizeTheaterRows(element.theaterRows || 4, element.seatCount || 8)
             : null;
-        element.x = Number(element.x || 120);
-        element.y = Number(element.y || 120);
-        element.width = size.width;
-        element.height = size.height;
+        element.xCm = Number(element.xCm ?? pixelsToCm(element.x || 120));
+        element.yCm = Number(element.yCm ?? pixelsToCm(element.y || 120));
+        element.widthCm = size.widthCm;
+        element.heightCm = size.heightCm;
+        element.x = element.xCm;
+        element.y = element.yCm;
+        element.width = element.widthCm;
+        element.height = element.heightCm;
+        element.diameterCm = tableDiameterCm(shape) || null;
+        element.sizeLabel = null;
         element.rotation = 0;
         element.opacity = 1;
         element.fill = element.fill || '#F3F8FA';
@@ -311,13 +336,48 @@ export function useEditorState() {
             scale: Math.min(Math.max(Number(viewport?.scale || 1), 0.4), 2.5),
             x: Number(viewport?.x || 0),
             y: Number(viewport?.y || 0),
+            snapToGrid: viewport?.snapToGrid ?? true,
         };
     }
 
     function buildDesignJson() {
+        const floorSize = floorCmSize(state.floorplan);
+
         return {
-            version: 1,
-            elements: state.elements.map((element) => clone(element)),
+            version: 2,
+            scale: {
+                unit: 'cm',
+                pixelsPerMeter: ENGINEERING_SCALE.PIXELS_PER_METER,
+                smallGridCm: ENGINEERING_SCALE.SMALL_GRID_CM,
+                floorWidthMeters: Number(state.floorplan?.width || 1),
+                floorHeightMeters: Number(state.floorplan?.height || 1),
+                floorWidthCm: floorSize.width,
+                floorHeightCm: floorSize.height,
+            },
+            elements: state.elements.map((element) => {
+                const copy = clone(element);
+
+                copy.xCm = snapCm(copy.xCm ?? copy.x, false);
+                copy.yCm = snapCm(copy.yCm ?? copy.y, false);
+                copy.widthCm = Number(copy.widthCm ?? copy.width);
+                copy.heightCm = Number(copy.heightCm ?? copy.height);
+                copy.x = copy.xCm;
+                copy.y = copy.yCm;
+                copy.width = copy.widthCm;
+                copy.height = copy.heightCm;
+
+                if (Array.isArray(copy.seats)) {
+                    copy.seats = copy.seats.map((seat) => ({
+                        ...seat,
+                        xCm: Number(seat.xCm ?? seat.x),
+                        yCm: Number(seat.yCm ?? seat.y),
+                        x: Number(seat.xCm ?? seat.x),
+                        y: Number(seat.yCm ?? seat.y),
+                    }));
+                }
+
+                return copy;
+            }),
             viewport: clone(state.viewport),
         };
     }
@@ -341,6 +401,7 @@ export function useEditorState() {
         zoomOut,
         resetZoom,
         togglePanMode,
+        toggleSnapToGrid,
         updateViewport,
         undo,
         redo,

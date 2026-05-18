@@ -103,25 +103,6 @@
     </div>
 
     <div class="field">
-        <label for="grid_size">حجم الشبكة</label>
-        <input
-            id="grid_size"
-            name="grid_size"
-            type="number"
-            min="5"
-            max="200"
-            value="{{ old('grid_size', $floorplan->grid_size ?: 20) }}"
-            placeholder="مثال: 20"
-            class="form-control @error('grid_size') is-invalid @enderror"
-            aria-describedby="grid_size_help"
-        >
-        <p id="grid_size_help" class="helper-text">حجم مربعات الشبكة داخل المحرر بالبكسل.</p>
-        @error('grid_size')
-            <p class="field-error">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <div class="field">
         <label for="background_image">صورة خلفية اختيارية</label>
         <input
             id="background_image"

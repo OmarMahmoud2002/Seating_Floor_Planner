@@ -60,6 +60,10 @@ defineProps({
         type: Boolean,
         default: false,
     },
+    snapToGrid: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 defineEmits([
@@ -67,6 +71,7 @@ defineEmits([
     'zoom-out',
     'reset-zoom',
     'toggle-pan',
+    'toggle-snap',
     'undo',
     'redo',
     'duplicate-selected',
@@ -115,6 +120,15 @@ defineEmits([
                     @click="$emit('toggle-pan')"
                 >
                     ⇅
+                </button>
+                <button
+                    type="button"
+                    class="editor-zoom-value"
+                    :class="{ active: snapToGrid }"
+                    title="Snap to 10 cm grid"
+                    @click="$emit('toggle-snap')"
+                >
+                    10cm
                 </button>
             </div>
             <button type="button" class="editor-btn primary" :disabled="saving" @click="$emit('save')">

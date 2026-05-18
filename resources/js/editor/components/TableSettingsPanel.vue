@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { TABLE_SHAPES } from '../composables/useSeatLayout';
+import { isRoundTableShape, TABLE_SHAPES } from '../composables/useSeatLayout';
 
 const props = defineProps({
     element: {
@@ -12,6 +12,7 @@ const props = defineProps({
 const emit = defineEmits(['update', 'duplicate', 'delete']);
 
 const isTable = computed(() => props.element?.type === 'table');
+const isFixedRoundTable = computed(() => isRoundTableShape(props.element?.tableShape));
 
 function updateValue(key, value) {
     emit('update', { [key]: value });
@@ -37,7 +38,7 @@ function updateValue(key, value) {
                 >
             </label>
 
-            <label v-if="isTable" class="field compact-field">
+            <label v-if="isTable && !isFixedRoundTable" class="field compact-field">
                 <span>شكل الطاولة</span>
                 <select
                     class="form-control"

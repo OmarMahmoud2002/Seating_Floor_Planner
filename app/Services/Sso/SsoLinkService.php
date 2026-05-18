@@ -37,8 +37,9 @@ class SsoLinkService
         $organization = null;
         $event = null;
         $user = null;
+        $isSuperAdmin = ($data['role'] ?? null) === User::ROLE_SUPER_ADMIN;
 
-        if ($target === self::TARGET_ADMIN_DASHBOARD) {
+        if ($target === self::TARGET_ADMIN_DASHBOARD || $isSuperAdmin) {
             $user = User::query()
                 ->where('role', User::ROLE_SUPER_ADMIN)
                 ->oldest()
@@ -55,10 +56,15 @@ class SsoLinkService
         }
 
         if ($target === self::TARGET_EVENT_FLOORPLANS) {
-            $event = Event::query()
-                ->where('organization_id', $organization->id)
-                ->where('external_event_id', (int) $data['external_event_id'])
-                ->firstOrFail();
+            $eventQuery = Event::query()
+                ->where('external_event_id', (int) $data['external_event_id']);
+
+            if ($organization) {
+                $eventQuery->where('organization_id', $organization->id);
+            }
+
+            $event = $eventQuery->firstOrFail();
+            $organization = $organization ?: $event->organization;
         }
 
         $plainToken = Str::random(64);

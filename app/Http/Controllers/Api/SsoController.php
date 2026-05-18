@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\Sso\SsoLinkService;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,8 +15,10 @@ class SsoController extends Controller
     {
         $data = $request->validate([
             'target' => ['required', 'string', Rule::in(SsoLinkService::allowedTargets())],
+            'role' => ['nullable', 'string', Rule::in([User::ROLE_SUPER_ADMIN])],
             'external_user_id' => [
-                Rule::requiredIf(fn () => $request->input('target') !== SsoLinkService::TARGET_ADMIN_DASHBOARD),
+                Rule::requiredIf(fn () => $request->input('target') !== SsoLinkService::TARGET_ADMIN_DASHBOARD
+                    && $request->input('role') !== User::ROLE_SUPER_ADMIN),
                 'integer',
                 'min:1',
             ],
