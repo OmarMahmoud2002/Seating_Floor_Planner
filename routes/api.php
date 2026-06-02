@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SyncGuestDeleteController;
 use App\Http\Controllers\Api\SyncGuestGiftController;
 use App\Http\Controllers\Api\SyncGuestStatusController;
 use App\Http\Controllers\Api\SyncOrganizationController;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,7 +25,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', AuthenticatedUserController::class);
 
 Route::prefix('sync')
-    ->middleware('sync.token')
+    ->middleware(['sync', 'sync.token'])
+    ->withoutMiddleware(ThrottleRequests::class.':api')
     ->name('api.sync.')
     ->group(function (): void {
         Route::post('/organizations', SyncOrganizationController::class)->name('organizations');

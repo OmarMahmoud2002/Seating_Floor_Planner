@@ -80,6 +80,18 @@ class SyncApiTest extends TestCase
         ]);
     }
 
+    public function test_sync_routes_are_not_limited_by_default_api_throttle(): void
+    {
+        for ($i = 0; $i < 65; $i++) {
+            $this->syncOrganization([
+                'name' => "Perfection Events {$i}",
+                'email' => "events-{$i}@example.com",
+            ])->assertOk();
+        }
+
+        $this->assertSame(1, Organization::query()->where('external_user_id', 25)->count());
+    }
+
     public function test_sync_api_creates_and_updates_event(): void
     {
         $organization = $this->createSyncedOrganization();
