@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 
 const props = defineProps({
     guests: {
@@ -29,6 +29,8 @@ const emit = defineEmits(['create-guest', 'assign', 'update-type', 'unassign', '
 const selectedGuestId = ref(null);
 const searchTerm = ref('');
 const showCreateForm = ref(false);
+const activePointerDrag = ref(null);
+const suppressNextClick = ref(false);
 const selection = reactive({
     tableId: '',
     seatKey: '',
@@ -100,8 +102,113 @@ const selectableSeats = computed(() => {
 });
 
 function dragGuest(event, guest) {
+    if (!event.dataTransfer || props.assigning) {
+        return;
+    }
+
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('application/x-guest-id', String(guest.id));
+}
+
+function dispatchGuestPointerDrag(phase, drag, event) {
+    window.dispatchEvent(new CustomEvent('editor:guest-pointer-drag', {
+        detail: {
+            phase,
+            guestId: drag.guestId,
+            clientX: event.clientX,
+            clientY: event.clientY,
+        },
+    }));
+}
+
+function cleanupPointerDrag() {
+    window.removeEventListener('pointermove', handleGuestPointerMove);
+    window.removeEventListener('pointerup', handleGuestPointerEnd);
+    window.removeEventListener('pointercancel', handleGuestPointerCancel);
+    activePointerDrag.value = null;
+}
+
+function startGuestPointerDrag(event, guest) {
+    if (props.assigning || event.pointerType === 'mouse' || (event.button !== undefined && event.button !== 0)) {
+        return;
+    }
+
+    activePointerDrag.value = {
+        pointerId: event.pointerId,
+        guestId: guest.id,
+        startX: event.clientX,
+        startY: event.clientY,
+        dragging: false,
+    };
+
+    event.currentTarget?.setPointerCapture?.(event.pointerId);
+    window.addEventListener('pointermove', handleGuestPointerMove, { passive: false });
+    window.addEventListener('pointerup', handleGuestPointerEnd, { passive: false });
+    window.addEventListener('pointercancel', handleGuestPointerCancel, { passive: false });
+}
+
+function handleGuestPointerMove(event) {
+    const drag = activePointerDrag.value;
+
+    if (!drag || event.pointerId !== drag.pointerId) {
+        return;
+    }
+
+    const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+
+    if (!drag.dragging && distance < 8) {
+        return;
+    }
+
+    event.preventDefault();
+
+    if (!drag.dragging) {
+        drag.dragging = true;
+        dispatchGuestPointerDrag('start', drag, event);
+    }
+
+    dispatchGuestPointerDrag('move', drag, event);
+}
+
+function handleGuestPointerEnd(event) {
+    const drag = activePointerDrag.value;
+
+    if (!drag || event.pointerId !== drag.pointerId) {
+        return;
+    }
+
+    if (drag.dragging) {
+        event.preventDefault();
+        suppressNextClick.value = true;
+        dispatchGuestPointerDrag('end', drag, event);
+
+        window.setTimeout(() => {
+            suppressNextClick.value = false;
+        }, 250);
+    }
+
+    cleanupPointerDrag();
+}
+
+function handleGuestPointerCancel(event) {
+    const drag = activePointerDrag.value;
+
+    if (drag && event.pointerId === drag.pointerId && drag.dragging) {
+        dispatchGuestPointerDrag('cancel', drag, event);
+    }
+
+    cleanupPointerDrag();
+}
+
+function handleGuestCardClick(event, guest) {
+    if (suppressNextClick.value) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        return;
+    }
+
+    openSeatPicker(guest);
 }
 
 function normalizeSearchText(value) {
@@ -216,6 +323,10 @@ watch(filteredGuests, () => {
     if (!stillVisible) {
         selectedGuestId.value = null;
     }
+});
+
+onBeforeUnmount(() => {
+    cleanupPointerDrag();
 });
 </script>
 
@@ -340,7 +451,8 @@ watch(filteredGuests, () => {
                 :class="{ seated: guest.assigned_seat }"
                 draggable="true"
                 @dragstart="dragGuest($event, guest)"
-                @click="openSeatPicker(guest)"
+                @pointerdown="startGuestPointerDrag($event, guest)"
+                @click="handleGuestCardClick($event, guest)"
             >
                 <div class="guest-card-main">
                     <span class="guest-card-icon" aria-hidden="true">{{ guest.assigned_seat ? '✓' : '•' }}</span>

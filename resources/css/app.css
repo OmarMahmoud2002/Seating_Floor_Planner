@@ -3905,6 +3905,7 @@ textarea {
     .editor-guest-card {
         min-width: 0;
         padding: 10px;
+        touch-action: none;
     }
 
     .editor-guest-card:has(.seat-picker) {

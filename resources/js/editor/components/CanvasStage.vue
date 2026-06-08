@@ -52,6 +52,7 @@ let gridLayer;
 let backgroundLayer;
 let elementLayer;
 let transformer;
+const guestPointerDragEvent = 'editor:guest-pointer-drag';
 
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -596,7 +597,12 @@ function addSeatNodes(group, element, isSelected) {
             strokeWidth: isHovered ? 3 : assignment || isSelected ? 2 : 1.5,
         }));
 
-        seatGroup.add(new Konva.Text({
+        const seatLabelGroup = new Konva.Group({
+            rotation: -((Number(element.rotation) || 0) + (Number(seat.rotation) || 0)),
+            listening: false,
+        });
+
+        seatLabelGroup.add(new Konva.Text({
             text: seat.label || String(seat.number),
             x: -13,
             y: -8,
@@ -610,6 +616,8 @@ function addSeatNodes(group, element, isSelected) {
             fontStyle: 'bold',
             listening: false,
         }));
+
+        seatGroup.add(seatLabelGroup);
 
         badges.forEach((badge, index) => {
             addBadgeIcon(seatGroup, badge, index, badges.length);
@@ -990,14 +998,27 @@ function nearestSeat(point) {
     return closest;
 }
 
-function stagePointFromDragEvent(event) {
+function stagePointFromClientPosition(clientX, clientY) {
     const rect = stage.container().getBoundingClientRect();
     const transform = stage.getAbsoluteTransform().copy().invert();
 
     return transform.point({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
+        x: clientX - rect.left,
+        y: clientY - rect.top,
     });
+}
+
+function stagePointFromDragEvent(event) {
+    return stagePointFromClientPosition(event.clientX, event.clientY);
+}
+
+function isClientInsideStage(clientX, clientY) {
+    const rect = stage.container().getBoundingClientRect();
+
+    return clientX >= rect.left
+        && clientX <= rect.right
+        && clientY >= rect.top
+        && clientY <= rect.bottom;
 }
 
 function handleDragOver(event) {
@@ -1058,6 +1079,69 @@ function handleDrop(event) {
     });
 }
 
+function handleGuestPointerDrag(event) {
+    const detail = event.detail || {};
+    const guestId = Number(detail.guestId);
+    const phase = detail.phase;
+
+    if (!stage || !guestId) {
+        return;
+    }
+
+    if (phase === 'cancel') {
+        clearHoverSeat();
+
+        return;
+    }
+
+    if (!isClientInsideStage(detail.clientX, detail.clientY)) {
+        clearHoverSeat();
+
+        if (phase === 'end') {
+            emit('drop-error', 'ضع الضيف فوق مقعد فارغ داخل المخطط.');
+        }
+
+        return;
+    }
+
+    const point = stagePointFromClientPosition(detail.clientX, detail.clientY);
+    const seat = nearestSeat(point);
+
+    if (phase === 'start' || phase === 'move') {
+        const nextHoverSeatKey = seat?.seatKey || null;
+
+        if (hoverSeatKey.value !== nextHoverSeatKey) {
+            hoverSeatKey.value = nextHoverSeatKey;
+            drawElements();
+        }
+
+        return;
+    }
+
+    if (phase !== 'end') {
+        return;
+    }
+
+    clearHoverSeat();
+
+    if (!seat) {
+        emit('drop-error', 'ضع الضيف فوق مقعد فارغ داخل المخطط.');
+
+        return;
+    }
+
+    if (seat.guestId && seat.guestId !== guestId) {
+        emit('drop-error', `هذا المقعد محجوز بالفعل لـ ${seat.guestName}.`);
+
+        return;
+    }
+
+    emit('assign-seat', {
+        guestId,
+        seatKey: seat.seatKey,
+    });
+}
+
 onMounted(async () => {
     await nextTick();
 
@@ -1098,6 +1182,7 @@ onMounted(async () => {
     drawGrid();
     drawBackground();
     drawElements();
+    window.addEventListener(guestPointerDragEvent, handleGuestPointerDrag);
 });
 
 watch(() => props.elements, drawElements, { deep: true });
@@ -1115,6 +1200,7 @@ watch(() => props.viewport, () => {
 }, { deep: true });
 
 onBeforeUnmount(() => {
+    window.removeEventListener(guestPointerDragEvent, handleGuestPointerDrag);
     stage?.destroy();
 });
 
