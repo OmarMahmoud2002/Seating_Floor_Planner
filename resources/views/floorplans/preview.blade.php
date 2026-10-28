@@ -28,7 +28,7 @@
                     {{ $floorplan->unit === 'meter' ? 'متر' : 'قدم' }}
                 </p>
             </div>
-            <img src="{{ asset('images/logo.png') }}" alt="Perfection">
+            <img src="{{ asset('images/tashrif-logo.png') }}" alt="تشريف">
         </header>
 
         <section class="floorplan-preview-shell" data-preview-shell>
@@ -49,12 +49,12 @@
                                 <div class="floorplan-preview-legend-items">
                                     @forelse ($guestTypes as $guestType)
                                         <div class="floorplan-preview-legend-item">
-                                            <span class="legend-swatch" style="--legend-color: {{ $guestType->color ?: '#317C77' }}"></span>
+                                            <span class="legend-swatch" style="--legend-color: {{ $guestType->color ?: '#4B2A6E' }}"></span>
                                             <span>{{ $guestType->display_name_ar }}</span>
                                         </div>
                                     @empty
                                         <div class="floorplan-preview-legend-item muted">
-                                            <span class="legend-swatch" style="--legend-color: #317C77"></span>
+                                            <span class="legend-swatch" style="--legend-color: #4B2A6E"></span>
                                             <span>المقاعد المحجوزة</span>
                                         </div>
                                     @endforelse
@@ -147,7 +147,7 @@
                                                 $assignment = $assignments->get($seat['key'] ?? '');
                                                 $guest = $assignment?->guest;
                                                 $guestType = $guest?->guestType;
-                                                $seatColor = $guestType?->color ?: '#317C77';
+                                                $seatColor = $guestType?->color ?: '#4B2A6E';
                                                 $seatPosition = Scale::seatPosition($seat);
                                                 $seatLeft = $seatPosition['x'];
                                                 $seatTop = $seatPosition['y'];

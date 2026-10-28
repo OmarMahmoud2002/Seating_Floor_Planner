@@ -116,7 +116,7 @@ function drawGrid() {
         const isMeterLine = Math.round(x) % Math.round(meterGridSize) === 0;
         gridLayer.add(new Konva.Line({
             points: [x, 0, x, size.height],
-            stroke: isMeterLine ? '#B6C2D2' : '#E8EDF3',
+            stroke: isMeterLine ? '#BFB2CD' : '#EAE4F0',
             strokeWidth: isMeterLine ? 1.1 : 0.45,
         }));
     }
@@ -125,7 +125,7 @@ function drawGrid() {
         const isMeterLine = Math.round(y) % Math.round(meterGridSize) === 0;
         gridLayer.add(new Konva.Line({
             points: [0, y, size.width, y],
-            stroke: isMeterLine ? '#B6C2D2' : '#E8EDF3',
+            stroke: isMeterLine ? '#BFB2CD' : '#EAE4F0',
             strokeWidth: isMeterLine ? 1.1 : 0.45,
         }));
     }
@@ -137,8 +137,8 @@ function drawGrid() {
             x: x + 3,
             y: 3,
             text: `${meter}m`,
-            fill: '#475467',
-            fontFamily: 'Cairo, Arial, sans-serif',
+            fill: '#564E60',
+            fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
             fontSize: 9,
             fontStyle: 'bold',
             listening: false,
@@ -152,8 +152,8 @@ function drawGrid() {
             x: 3,
             y: y + 3,
             text: `${meter}m`,
-            fill: '#475467',
-            fontFamily: 'Cairo, Arial, sans-serif',
+            fill: '#564E60',
+            fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
             fontSize: 9,
             fontStyle: 'bold',
             listening: false,
@@ -165,7 +165,7 @@ function drawGrid() {
         y: 2,
         width: size.width - 4,
         height: size.height - 4,
-        stroke: '#CBD5E1',
+        stroke: '#CFC4DB',
         strokeWidth: 1.25,
         opacity: 0.7,
         listening: false,
@@ -176,7 +176,7 @@ function drawGrid() {
         y: 9,
         width: size.width - 18,
         height: size.height - 18,
-        stroke: '#E7C539',
+        stroke: '#C1AC98',
         strokeWidth: 1,
         dash: [10, 8],
         opacity: 0.38,
@@ -224,10 +224,10 @@ function addTableShape(group, element, isSelected) {
     const shape = element.tableShape || 'rectangle';
     const rect = cmRectToPixels(element);
     const baseAttrs = {
-        fill: element.fill || '#F3F8FA',
-        stroke: isSelected ? '#31719D' : element.stroke || '#4596CF',
+        fill: element.fill || '#F8F6FA',
+        stroke: isSelected ? '#4B2A6E' : element.stroke || '#6D4299',
         strokeWidth: isSelected ? 3 : 2,
-        shadowColor: 'rgba(15, 23, 42, 0.15)',
+        shadowColor: 'rgba(30, 24, 38, 0.15)',
         shadowBlur: isSelected ? 12 : 4,
         shadowOpacity: 0.18,
         opacity: Number(element.opacity ?? 1),
@@ -267,8 +267,8 @@ function addTableLabel(group, element) {
             y: 0,
             align: 'center',
             verticalAlign: 'middle',
-            fill: '#1F2937',
-            fontFamily: 'Cairo, Arial, sans-serif',
+            fill: '#1E1826',
+            fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
             fontSize: 12,
             fontStyle: 'bold',
             ellipsis: true,
@@ -285,8 +285,8 @@ function addTableLabel(group, element) {
         y: shape === 'theater' ? 4 : 0,
         align: 'center',
         verticalAlign: shape === 'theater' ? 'top' : 'middle',
-        fill: '#1F2937',
-        fontFamily: 'Cairo, Arial, sans-serif',
+        fill: '#1E1826',
+        fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
         fontSize: 15,
         fontStyle: 'bold',
         listening: false,
@@ -329,7 +329,7 @@ function hexToRgba(color, alpha = 1) {
 }
 
 function guestTypeColor(assignment) {
-    return assignment?.guest?.type?.color || '#317C77';
+    return assignment?.guest?.type?.color || '#4B2A6E';
 }
 
 function seatBadges(assignment) {
@@ -351,7 +351,7 @@ function seatGuestDisplayName(name) {
     return `${parts[0]} ${parts[parts.length - 1]}`;
 }
 
-function makeGuestLabel(guestName, position, isHovered, fontSize = 10, guestColor = '#317C77') {
+function makeGuestLabel(guestName, position, isHovered, fontSize = 10, guestColor = '#4B2A6E') {
     const labelNode = new Konva.Label({
         x: position.x,
         y: position.y,
@@ -359,11 +359,11 @@ function makeGuestLabel(guestName, position, isHovered, fontSize = 10, guestColo
     });
 
     labelNode.add(new Konva.Tag({
-        fill: isHovered ? '#FFFDF1' : '#FFFFFF',
+        fill: isHovered ? '#FBF8F2' : '#FFFFFF',
         stroke: isHovered ? guestColor : hexToRgba(guestColor, 0.45),
         strokeWidth: 1,
         cornerRadius: 8,
-        shadowColor: 'rgba(15, 23, 42, 0.16)',
+        shadowColor: 'rgba(30, 24, 38, 0.16)',
         shadowBlur: isHovered ? 8 : 5,
         shadowOpacity: isHovered ? 0.18 : 0.12,
     }));
@@ -376,8 +376,8 @@ function makeGuestLabel(guestName, position, isHovered, fontSize = 10, guestColo
         align: 'center',
         verticalAlign: 'middle',
         ellipsis: true,
-        fill: '#1F2937',
-        fontFamily: 'Cairo, Arial, sans-serif',
+        fill: '#1E1826',
+        fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
         fontSize,
         fontStyle: 'bold',
     }));
@@ -397,7 +397,7 @@ function badgePosition(index, total) {
 
 function addBadgeIcon(group, badge, index, total) {
     const position = badgePosition(index, total);
-    const color = badge.color || (badge.type === 'gift' ? '#E7C539' : '#00B894');
+    const color = badge.color || (badge.type === 'gift' ? '#C1AC98' : '#00B894');
     const isGift = badge.type === 'gift';
     const radius = isGift ? 8 : 6.2;
 
@@ -408,7 +408,7 @@ function addBadgeIcon(group, badge, index, total) {
         fill: color,
         stroke: '#FFFFFF',
         strokeWidth: isGift ? 1.8 : 1.2,
-        shadowColor: isGift ? 'rgba(249, 115, 22, 0.45)' : 'rgba(15, 23, 42, 0.16)',
+        shadowColor: isGift ? 'rgba(249, 115, 22, 0.45)' : 'rgba(30, 24, 38, 0.16)',
         shadowBlur: isGift ? 6 : 3,
         shadowOpacity: isGift ? 0.28 : 0.14,
         listening: false,
@@ -593,7 +593,7 @@ function addSeatNodes(group, element, isSelected) {
             fill: isHovered
                 ? hexToRgba(assignedColor, assignment ? 0.22 : 0.12)
                 : assignment ? hexToRgba(assignedColor, 0.16) : '#FFFFFF',
-            stroke: isHovered ? assignedColor : assignment ? assignedColor : isSelected ? '#317C77' : '#CBD5E1',
+            stroke: isHovered ? assignedColor : assignment ? assignedColor : isSelected ? '#4B2A6E' : '#CFC4DB',
             strokeWidth: isHovered ? 3 : assignment || isSelected ? 2 : 1.5,
         }));
 
@@ -610,8 +610,8 @@ function addSeatNodes(group, element, isSelected) {
             height: 16,
             align: 'center',
             verticalAlign: 'middle',
-            fill: assignment ? assignedColor : '#31719D',
-            fontFamily: 'Cairo, Arial, sans-serif',
+            fill: assignment ? assignedColor : '#4B2A6E',
+            fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
             fontSize: 10,
             fontStyle: 'bold',
             listening: false,
@@ -679,11 +679,11 @@ function addGenericElementShape(group, element, isSelected) {
     const baseAttrs = {
         width: rect.width,
         height: rect.height,
-        fill: element.fill || '#F3F8FA',
-        stroke: isSelected ? '#31719D' : element.stroke || '#4D9B97',
+        fill: element.fill || '#F8F6FA',
+        stroke: isSelected ? '#4B2A6E' : element.stroke || '#6D4299',
         strokeWidth: isSelected ? 3 : 2,
         opacity: Number(element.opacity ?? 1),
-        shadowColor: 'rgba(15, 23, 42, 0.12)',
+        shadowColor: 'rgba(30, 24, 38, 0.12)',
         shadowBlur: isSelected ? 10 : 3,
         shadowOpacity: isSelected ? 0.16 : 0.08,
     };
@@ -698,7 +698,7 @@ function addGenericElementShape(group, element, isSelected) {
     }
 
     if (element.type === 'door') {
-        const stroke = isSelected ? '#31719D' : element.stroke || '#0F766E';
+        const stroke = isSelected ? '#4B2A6E' : element.stroke || '#4B2A6E';
         const padding = Math.max(5, Math.min(rect.width, rect.height) * 0.08);
         const hingeX = padding;
         const baseY = rect.height - padding;
@@ -711,7 +711,7 @@ function addGenericElementShape(group, element, isSelected) {
             width: rect.width,
             height: rect.height,
             fill: 'rgba(255,255,255,0.01)',
-            stroke: isSelected ? '#7CB6D8' : 'transparent',
+            stroke: isSelected ? '#A985D1' : 'transparent',
             strokeWidth: isSelected ? 1.2 : 0,
             dash: [5, 5],
             opacity: 0.75,
@@ -743,7 +743,7 @@ function addGenericElementShape(group, element, isSelected) {
             y: baseY,
             radius: Math.max(3.5, strokeWidth + 1.4),
             fill: '#F59E0B',
-            stroke: '#F8FAFC',
+            stroke: '#FAF8FC',
             strokeWidth: 1.2,
             listening: false,
         }));
@@ -802,8 +802,8 @@ function addGenericElementLabel(group, element) {
         height: rect.height,
         align: 'center',
         verticalAlign: 'middle',
-        fill: '#1F2937',
-        fontFamily: 'Cairo, Arial, sans-serif',
+        fill: '#1E1826',
+        fontFamily: '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif',
         fontSize: Math.max(Math.min(rect.height / 3, 15), 10),
         fontStyle: 'bold',
         listening: false,
@@ -924,8 +924,8 @@ function drawElements() {
             'bottom-center',
             'bottom-right',
         ],
-        borderStroke: '#31719D',
-        anchorStroke: '#31719D',
+        borderStroke: '#4B2A6E',
+        anchorStroke: '#4B2A6E',
         anchorFill: '#FFFFFF',
         anchorSize: 10,
         boundBoxFunc: (oldBox, newBox) => {

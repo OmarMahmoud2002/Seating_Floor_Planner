@@ -133,7 +133,7 @@ function updateValue(key, value) {
                 <input
                     class="form-control color-control"
                     type="color"
-                    :value="element.fill || '#F3F8FA'"
+                    :value="element.fill || '#F8F6FA'"
                     @input="updateValue('fill', $event.target.value)"
                 >
             </label>
@@ -143,7 +143,7 @@ function updateValue(key, value) {
                 <input
                     class="form-control color-control"
                     type="color"
-                    :value="element.stroke || '#4596CF'"
+                    :value="element.stroke || '#6D4299'"
                     @input="updateValue('stroke', $event.target.value)"
                 >
             </label>

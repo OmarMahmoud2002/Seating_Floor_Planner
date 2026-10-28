@@ -15,11 +15,11 @@ use Throwable;
 class GuestImportService
 {
     private const TYPE_COLORS = [
-        '#4D9B97',
-        '#4596CF',
-        '#31719D',
-        '#317C77',
-        '#E7C539',
+        '#6E4299',
+        '#B08A4E',
+        '#4B2A6E',
+        '#A985D1',
+        '#2E7D6B',
         '#A19F9E',
     ];
 

@@ -23,7 +23,7 @@
             name="color"
             type="color"
             class="form-control color-control @error('color') is-invalid @enderror"
-            value="{{ old('color', $guestType->color ?: '#4D9B97') }}"
+            value="{{ old('color', $guestType->color ?: '#6D4299') }}"
             required
         >
         @error('color')

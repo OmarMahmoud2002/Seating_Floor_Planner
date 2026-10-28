@@ -41,7 +41,7 @@ class FloorplanEditorController extends Controller
                     ? route('events.floorplans.preview', [$floorplan->event->preview_token, $floorplan])
                     : null,
                 'homeUrl' => route('dashboard'),
-                'logoUrl' => asset('images/logo.png'),
+                'logoUrl' => asset('images/tashrif-logo.png'),
                 'backUrl' => route('events.show', $floorplan->event),
                 'csrfToken' => csrf_token(),
             ],

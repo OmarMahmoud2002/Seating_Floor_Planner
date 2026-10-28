@@ -6,7 +6,7 @@
     <main class="preview-page">
         <section class="preview-card">
             <div class="preview-brand">
-                <img src="{{ asset('images/logo.png') }}" alt="Perfection">
+                <img src="{{ asset('images/tashrif-logo.png') }}" alt="تشريف">
             </div>
 
             <div class="preview-heading">

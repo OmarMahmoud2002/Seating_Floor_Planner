@@ -1,8 +1,8 @@
 <aside class="app-sidebar" id="app-sidebar">
     <div class="sidebar-header">
         <a href="{{ route('dashboard') }}" class="sidebar-brand" aria-label="لوحة التحكم">
-            <img src="{{ asset('images/logo.png') }}" alt="بيرفكشن" class="sidebar-logo sidebar-logo-full">
-            <img src="{{ asset('images/icon.png') }}" alt="بيرفكشن" class="sidebar-logo sidebar-logo-mark">
+            <img src="{{ asset('images/tashrif-logo-white.png') }}" alt="تشريف" class="sidebar-logo sidebar-logo-full">
+            <img src="{{ asset('images/tashrif-icon.png') }}" alt="تشريف" class="sidebar-logo sidebar-logo-mark">
         </a>
     </div>
 
@@ -69,4 +69,11 @@
             <span class="nav-label">المخططات</span>
         </a>
     </nav>
+
+    <div class="sidebar-footer" aria-hidden="true">
+        <span class="sidebar-footer-mark">
+            <svg viewBox="0 0 24 24"><path d="M12 3.5 15 8.7H9z" /><path d="M8.4 10.2l3 5.2h-6z" /><path d="M15.6 10.2l3 5.2h-6z" /></svg>
+        </span>
+        <span class="sidebar-footer-text wordmark-latin">Tashrif</span>
+    </div>
 </aside>

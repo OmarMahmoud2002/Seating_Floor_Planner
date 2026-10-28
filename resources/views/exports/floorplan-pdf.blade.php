@@ -9,7 +9,7 @@
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            color: #1F2937;
+            color: #1E1826;
             font-size: 12px;
             line-height: 1.65;
             background: #FFFFFF;
@@ -17,11 +17,11 @@
 
         .header {
             text-align: right;
-            border: 1px solid #E4E7EC;
-            border-right: 5px solid #4D9B97;
+            border: 1px solid #E3DCEA;
+            border-right: 5px solid #6D4299;
             padding: 12px 14px;
             margin-bottom: 12px;
-            background: #F8FAFC;
+            background: #FAF8FC;
         }
 
         h1,
@@ -31,18 +31,18 @@
         }
 
         h1 {
-            color: #31719D;
+            color: #4B2A6E;
             font-size: 21px;
         }
 
         h2 {
             margin-top: 4px;
-            color: #317C77;
+            color: #4B2A6E;
             font-size: 15px;
         }
 
         .header p {
-            color: #667085;
+            color: #645C6E;
         }
 
         .meta {
@@ -52,7 +52,7 @@
         }
 
         .meta td {
-            border: 1px solid #E4E7EC;
+            border: 1px solid #E3DCEA;
             padding: 6px 9px;
             vertical-align: top;
             text-align: right;
@@ -60,43 +60,43 @@
 
         .meta .label {
             width: 22%;
-            background: #F3F8FA;
-            color: #667085;
+            background: #F8F6FA;
+            color: #645C6E;
             font-weight: bold;
         }
 
         .canvas-card {
-            border: 1px solid #E4E7EC;
+            border: 1px solid #E3DCEA;
             padding: 8px;
             margin-top: 10px;
-            background: #F8FAFC;
+            background: #FAF8FC;
             text-align: center;
             page-break-inside: avoid;
         }
 
         .canvas-title {
             margin-bottom: 7px;
-            color: #31719D;
+            color: #4B2A6E;
             font-weight: bold;
             text-align: right;
         }
 
         .canvas-image {
             display: block;
-            border: 1px solid #CBD5E1;
+            border: 1px solid #CFC4DB;
             background: #FFFFFF;
             margin: 0 auto;
         }
 
         .summary {
             margin-top: 12px;
-            border: 1px solid #E4E7EC;
+            border: 1px solid #E3DCEA;
             padding: 9px 10px;
             background: #FFFFFF;
         }
 
         .summary strong {
-            color: #31719D;
+            color: #4B2A6E;
         }
     </style>
 </head>

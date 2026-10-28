@@ -14,7 +14,7 @@ class GuestTypeController extends Controller
     {
         return view('guest-types.index', [
             'guestType' => new GuestType([
-                'color' => '#4D9B97',
+                'color' => '#6E4299',
                 'sort_order' => 90,
             ]),
             'guestTypes' => GuestType::query()

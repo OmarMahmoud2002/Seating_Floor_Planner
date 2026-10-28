@@ -33,7 +33,7 @@ class StoreGuestTypeRequest extends FormRequest
             'name_ar.required' => 'اسم نوع الضيف مطلوب.',
             'name_ar.max' => 'اسم نوع الضيف طويل جدا.',
             'color.required' => 'لون نوع الضيف مطلوب.',
-            'color.regex' => 'اللون يجب أن يكون بصيغة HEX مثل #4D9B97.',
+            'color.regex' => 'اللون يجب أن يكون بصيغة HEX مثل #6E4299.',
             'icon.max' => 'اسم الأيقونة طويل جدا.',
             'sort_order.integer' => 'ترتيب العرض يجب أن يكون رقما.',
             'sort_order.max' => 'ترتيب العرض كبير جدا.',

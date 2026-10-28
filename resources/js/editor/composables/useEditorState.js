@@ -123,8 +123,8 @@ export function useEditorState() {
             widthCm: size.widthCm,
             heightCm: size.heightCm,
             rotation: 0,
-            fill: '#F3F8FA',
-            stroke: '#4596CF',
+            fill: '#F8F6FA',
+            stroke: '#6D4299',
         });
 
         state.elements.push(element);
@@ -324,8 +324,8 @@ export function useEditorState() {
         element.sizeLabel = null;
         element.rotation = 0;
         element.opacity = 1;
-        element.fill = element.fill || '#F3F8FA';
-        element.stroke = element.stroke || '#4596CF';
+        element.fill = element.fill || '#F8F6FA';
+        element.stroke = element.stroke || '#6D4299';
         element.seats = generateSeats(element);
 
         return element;

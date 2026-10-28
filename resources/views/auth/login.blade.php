@@ -4,15 +4,30 @@
 
 @section('body')
     <main class="auth-page">
+        <aside class="auth-brand-panel" aria-hidden="true">
+            <div class="auth-brand-inner">
+                <img src="{{ asset('images/tashrif-logo-white.png') }}" alt="" class="auth-brand-logo">
+                <div class="auth-brand-copy">
+                    <span class="auth-brand-divider"></span>
+                    <p class="auth-brand-quote">كل ضيف في مقعده الصحيح، من لحظة الدعوة حتى الجلوس.</p>
+                </div>
+                <ul class="auth-brand-points">
+                    <li>مخططات قاعات دقيقة بالمقاييس الحقيقية</li>
+                    <li>تجليس الضيوف بالسحب والإفلات</li>
+                    <li>تصدير المخطط وقوائم الضيوف للطباعة</li>
+                </ul>
+            </div>
+        </aside>
+
         <section class="auth-panel" aria-labelledby="login-title">
             <div class="brand-lockup">
-                <img src="{{ asset('images/logo.png') }}" alt="Perfection" class="brand-logo">
+                <img src="{{ asset('images/tashrif-logo.png') }}" alt="تشريف" class="brand-logo">
             </div>
 
             <div class="auth-heading">
-                <p class="eyebrow">نظام داخلي</p>
-                <h1 id="login-title">تسجيل الدخول</h1>
-                <p>ادخل إلى لوحة إدارة الفعاليات ومخططات التجليس.</p>
+                <p class="eyebrow">نظام التجليس الإلكتروني</p>
+                <h1 id="login-title">أهلاً بعودتك</h1>
+                <p>سجّل الدخول لإدارة الأحداث ومخططات التجليس.</p>
             </div>
 
             @include('partials.flash')
@@ -57,8 +72,10 @@
                     <span>تذكرني</span>
                 </label>
 
-                <button type="submit" class="btn btn-primary full-width">دخول لوحة التحكم</button>
+                <button type="submit" class="btn btn-primary btn-lg full-width">دخول لوحة التحكم</button>
             </form>
+
+            <p class="auth-footnote">نظام داخلي · <span class="wordmark-latin">Tashrif</span></p>
         </section>
     </main>
 @endsection

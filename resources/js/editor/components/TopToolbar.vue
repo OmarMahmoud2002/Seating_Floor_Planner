@@ -85,7 +85,7 @@ defineEmits([
     <header class="editor-toolbar">
         <div class="editor-heading">
             <a :href="homeUrl" class="editor-brand" aria-label="الصفحة الرئيسية">
-                <img :src="logoUrl" alt="بيرفكشن" class="editor-brand-logo">
+                <img :src="logoUrl" alt="تشريف" class="editor-brand-logo">
             </a>
 
             <div class="editor-title">

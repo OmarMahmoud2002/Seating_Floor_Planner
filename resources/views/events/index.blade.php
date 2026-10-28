@@ -37,7 +37,7 @@
 
         @if ($events->isEmpty())
             <div class="empty-state">
-                <img src="{{ asset('images/icon.png') }}" alt="" aria-hidden="true">
+                <img src="{{ asset('images/tashrif-icon.png') }}" alt="" aria-hidden="true">
                 <h3>لا توجد أحداث بعد</h3>
                 <p>ابدأ بإنشاء أول حدث، وبعدها ستتمكن من إضافة المخططات والضيوف.</p>
                 <a href="{{ route('events.create') }}" class="btn btn-primary">إنشاء حدث جديد</a>
